@@ -1,78 +1,81 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Skystore</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
-</head>
-<body>
-<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
-    <h5 class="my-0 mr-md-auto font-weight-normal">Skystore</h5>
-    <nav class="ms-5">
-        <a class="p-2 btn btn-outline-primary" href="/">Каталог</a>
-        <a class="p-2 btn btn-outline-primary" href="/contacts/">Контакты</a>
-    </nav>
+{% extends 'catalog/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<!-- Hero секция -->
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold">Skystore</h1>
+        <p class="lead fs-3 mt-3">Качественные товары для дома и офиса</p>
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-light btn-lg mt-3">
+            Перейти в каталог →
+        </a>
+    </div>
 </div>
 
-<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-    <h1 class="display-4">Skystore</h1>
-    <p class="lead">Skystore - это отличный вариант хранения ваших плагинов и примеров кода, который вы бы хотели
-        продать</p>
-</div>
-
-<div class="container">
+<!-- Преимущества -->
+<div class="container mb-5">
     <div class="row text-center">
-        <div class="col-3">
-            <div class="card mb-4 box-shadow">
-                <div class="card-header">
-                    <h4 class="my-0 font-weight-normal">Удобный сервис рассылок</h4>
-                </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h1 class="card-title pricing-card-title">$ 140</h1>
-                    <ul class="list-unstyled mt-3 mb-4 text-start m-3">
-                        <li>- Неограниченная лицензия</li>
-                        <li>- Поддержка</li>
-                        <li>- Установка на сервер</li>
-                        <li>- Получение обновлений</li>
-                    </ul>
-                    <button type="button" class="btn btn-lg btn-block btn-outline-primary">Купить</button>
+                    <i class="fas fa-truck fa-3x text-primary mb-3"></i>
+                    <h5>Быстрая доставка</h5>
+                    <p class="text-muted">По всей России за 3-5 дней</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h5>Гарантия качества</h5>
+                    <p class="text-muted">Все товары сертифицированы</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                    <h5>Поддержка 24/7</h5>
+                    <p class="text-muted">Всегда готовы помочь</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-undo-alt fa-3x text-primary mb-3"></i>
+                    <h5>Возврат товара</h5>
+                    <p class="text-muted">14 дней на возврат</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <footer class="pt-4 my-md-5 pt-md-5 border-top">
-        <div class="row">
-            <div class="col-12 col-md">
-                SkyStore
-                <small class="d-block mb-3 text-muted">&copy; 2023</small>
-            </div>
-            <div class="col-6 col-md">
-                <h5>Категории</h5>
-                <ul class="list-unstyled text-small">
-                    <li><a class="text-muted" href="#">Рассылки</a></li>
-                    <li><a class="text-muted" href="#">Телеграм боты</a></li>
-                    <li><a class="text-muted" href="#">Полезные утилиты</a></li>
-                    <li><a class="text-muted" href="#">Веб-приложения</a></li>
-                    <li><a class="text-muted" href="#">Микросервисы</a></li>
-                </ul>
-            </div>
-            <div class="col-6 col-md">
-                <h5>Дополнительно</h5>
-                <ul class="list-unstyled text-small">
-                    <li><a class="text-muted" href="#">Мы пишем</a></li>
-                </ul>
-            </div>
-            <div class="col-6 col-md">
-                <h5>О нас</h5>
-                <ul class="list-unstyled text-small">
-                    <li><a class="text-muted" href="/contacts/">Контакты</a></li>
-                </ul>
-            </div>
-        </div>
-    </footer>
 </div>
-<script type="text/javascript" src="/static/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+<!-- Категории -->
+{% if categories %}
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Категории товаров</h2>
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-3 col-6 mb-3">
+            <a href="{% url 'catalog:category_products' category.id %}" class="text-decoration-none">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-folder fa-2x text-primary mb-2"></i>
+                        <h6>{{ category.name }}</h6>
+                        <small class="text-muted">{{ category.products.count }} товаров</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
