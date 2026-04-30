@@ -1,0 +1,124 @@
+{% extends 'catalog/base.html' %}
+{% load static %}
+
+{% block title %}Контакты{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4 display-5 fw-bold">Контакты</h1>
+    <hr class="mb-4">
+
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary mb-3">
+                        <i class="fas fa-building"></i> Наши реквизиты
+                    </h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 100px;">Страна:</th>
+                            <td>Россия</td>
+                        </tr>
+                        <tr>
+                            <th>ИНН:</th>
+                            <td>1234567890</td>
+                        </tr>
+                        <tr>
+                            <th>КПП:</th>
+                            <td>0987654321</td>
+                        </tr>
+                        <tr>
+                            <th>Адрес:</th>
+                            <td>г. Москва, ул. Тверская, д. 1</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>info@myshop.ru</td>
+                        </tr>
+                        <tr>
+                            <th>Телефон:</th>
+                            <td>+7 (999) 123-45-67</td>
+                        </tr>
+                        <tr>
+                            <th>Режим работы:</th>
+                            <td>Пн-Пт: 9:00 - 18:00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary mb-3">
+                        <i class="fas fa-paper-plane"></i> Свяжитесь с нами
+                    </h5>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Имя <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Телефон <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Сообщение</label>
+                            <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Отправить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок с последними контактами (опционально) -->
+    {% if contacts %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Последние обращения</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Имя</th>
+                                    <th>Телефон</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for contact in contacts %}
+                                <tr>
+                                    <td>{{ contact.name }}</td>
+                                    <td>{{ contact.phone }}</td>
+                                    <td>{{ contact.created_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
