@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Category(models.Model):
+    objects = models.Manager()
     name = models.CharField(
         max_length=150, verbose_name="Наименование категории", help_text="Введите наименование категории"
     )
@@ -19,6 +20,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    objects = models.Manager()
     name = models.CharField(
         max_length=150, verbose_name="Наименование товара", help_text="Введите наименование товара"
     )
@@ -53,6 +55,7 @@ class Product(models.Model):
 
 
 class Contact(models.Model):
+    objects = models.Manager()
     name = models.CharField(max_length=100, verbose_name="Имя", help_text="Введите ваше имя")
     phone = models.CharField(max_length=20, verbose_name="Контактный телефон", help_text="Введите номер телефона")
     message = models.TextField(verbose_name="Сообщение", help_text="Введите ваше сообщение", blank=True, null=True)

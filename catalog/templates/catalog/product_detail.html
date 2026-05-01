@@ -1,0 +1,58 @@
+{% extends 'catalog/base.html' %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<!-- Навигационная цепочка для перехода обратно -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}">Товары</a></li>
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="row g-0">
+        <div class="col-md-6">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="img-fluid rounded-start" alt="{{ product.name }}">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <span class="text-muted">Нет изображения</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <div class="card-body">
+                <h1 class="card-title">{{ product.name }}</h1>
+
+                <p class="card-text">
+                    <span class="badge bg-secondary">{{ product.category.name }}</span>
+                </p>
+
+                <h2 class="text-primary mb-4">{{ product.price }} ₽</h2>
+
+                <hr>
+
+                <h5>Описание товара:</h5>
+                <p class="card-text">{{ product.description|default:"Описание отсутствует" }}</p>
+
+                <hr>
+
+                <div class="text-muted small">
+                    <p>📅 Добавлен: {{ product.created_at|date:"d.m.Y H:i" }}</p>
+                    <p>✏️ Обновлен: {{ product.updated_at|date:"d.m.Y H:i" }}</p>
+                </div>
+
+                <!-- Кнопка возврата к списку товаров -->
+                <div class="mt-4">
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-secondary">
+                        ← Назад к списку товаров
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
