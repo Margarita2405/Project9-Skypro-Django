@@ -1,52 +1,64 @@
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
+from django.views.generic import TemplateView, ListView, DetailView, View
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
 
 from catalog.models import Category, Contact, Product
 
 
-def home(request: HttpRequest) -> HttpResponse:
-    """Главная презентационная страница"""
-    # Получаем последние 6 товаров для показа на главной
-    latest_products = Product.objects.select_related("category").all().order_by("-created_at")[:6]
+class HomeView(TemplateView):
+    template_name = "catalog/home.html"
 
-    # Получаем категории для отображения
-    categories = Category.objects.all()
-
-    context = {
-        "latest_products": latest_products,
-        "categories": categories,
-        "title": "Skystore - Магазин электроники и не только",
-    }
-    return render(request, "catalog/home.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["latest_products"] = Product.objects.select_related("category").order_by("-created_at")[:6]
+        context["categories"] = Category.objects.all()
+        context["title"] = "Skystore - Качественные товары для дома и офиса"
+        return context
 
 
-def product_list(request: HttpRequest) -> HttpResponse:
-    """Страница каталога со списком всех товаров"""
-    products = Product.objects.select_related("category").all().order_by("-created_at")
-    categories = Category.objects.all()
+class ProductListView(ListView):
+    model = Product
+    template_name = "catalog/product_list.html"
+    context_object_name = "products"
+    ordering = "-created_at"
 
-    context = {
-        "products": products,
-        "categories": categories,
-        "title": "Каталог товаров",
-    }
-    return render(request, "catalog/product_list.html", context)
+    def get_queryset(self):
+        # select_related для оптимизации
+        return super().get_queryset().select_related("category")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categories"] = Category.objects.all()
+        context["title"] = "Каталог товаров"
+        return context
 
-def product_detail(request: HttpRequest, pk: int) -> HttpResponse:
-    """Детальная страница товара"""
-    product = get_object_or_404(Product.objects.select_related("category"), pk=pk)
-    context = {
-        "product": product,
-        "title": product.name,
-    }
-    return render(request, "catalog/product_detail.html", context)
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "catalog/product_detail.html"
+    context_object_name = "product"
 
+    def get_queryset(self):
+        return super().get_queryset().select_related("category")
 
-def contacts(request: HttpRequest) -> HttpResponse:
-    """Страница контактов"""
-    if request.method == "POST":
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = self.object.name
+        return context
+
+class ContactsView(View):
+    template_name = "catalog/contacts.html"
+
+    def get(self, request):
+        contacts_list = Contact.objects.all().order_by("-created_at")[:5]
+        context = {
+            "contacts": contacts_list,
+            "title": "Контакты",
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
         name = request.POST.get("name")
         phone = request.POST.get("phone")
         message = request.POST.get("message")
@@ -54,29 +66,32 @@ def contacts(request: HttpRequest) -> HttpResponse:
         if name and phone:
             Contact.objects.create(name=name, phone=phone, message=message)
             messages.success(request, f"Спасибо {name}! Ваше сообщение отправлено.")
-            return redirect("catalog:contacts")
+            return HttpResponseRedirect(reverse_lazy("catalog:contacts"))
         else:
             messages.error(request, "Пожалуйста, заполните имя и телефон.")
+            # При ошибке возвращаем ту же страницу с уже отправленными данными
+            contacts_list = Contact.objects.all().order_by("-created_at")[:5]
+            context = {
+                "contacts": contacts_list,
+                "title": "Контакты",
+            }
+            return render(request, self.template_name, context)
 
-    contacts_list = Contact.objects.all().order_by("-created_at")[:5]
 
-    context = {
-        "contacts": contacts_list,
-        "title": "Контакты",
-    }
-    return render(request, "catalog/contacts.html", context)
+class CategoryProductsView(ListView):
+    model = Product
+    template_name = "catalog/product_list.html"
+    context_object_name = "products"
+    ordering = "-created_at"
 
+    def get_queryset(self):
+        category_id = self.kwargs["category_id"]
+        self.category = get_object_or_404(Category, pk=category_id)
+        return self.category.products.all().order_by("-created_at")
 
-def category_products(request, category_id):
-    """Товары по категории"""
-    category = get_object_or_404(Category, pk=category_id)
-    products = category.products.all().order_by("-created_at")
-    categories = Category.objects.all()
-
-    context = {
-        "category": category,
-        "products": products,
-        "categories": categories,
-        "title": f"Категория: {category.name}",
-    }
-    return render(request, "catalog/product_list.html", context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categories"] = Category.objects.all()
+        context["category"] = self.category
+        context["title"] = f"Категория: {self.category.name}"
+        return context
