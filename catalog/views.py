@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 
@@ -33,6 +34,7 @@ class ProductListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['request'] = self.request
         context["categories"] = Category.objects.all()
         context["title"] = "Каталог товаров"
         return context
@@ -58,6 +60,10 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     template_name = "catalog/product_form.html"
     success_url = reverse_lazy("catalog:product_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
 
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
@@ -65,11 +71,33 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "catalog/product_form.html"
     success_url = reverse_lazy("catalog:product_list")
 
+    def get_object(self, queryset=None):
+        object = super().get_object(queryset)
+        if object.owner != self.request.user:
+            raise PermissionDenied("Редактировать может только владелец")
+        return object
+
 
 class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     template_name = "catalog/product_confirm_delete.html"
     success_url = reverse_lazy("catalog:product_list")
+
+    def get_object(self, queryset=None):
+        object = super().get_object(queryset)
+        if object.owner != self.request.user and not self.request.user.has_perm('catalog.delete_product'):
+            raise PermissionDenied("Удалять может владелец или модератор")
+        return object
+
+
+class UnpublishProductView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        if not request.user.has_perm('catalog.can_unpublish_product'):
+            raise PermissionDenied("Нет права отменять публикацию")
+        product.is_published = False
+        product.save()
+        return redirect('catalog:product_detail', pk=pk)
 
 
 class ContactsView(View):
@@ -116,6 +144,7 @@ class CategoryProductsView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['request'] = self.request
         context["categories"] = Category.objects.all()
         context["category"] = self.category
         context["title"] = f"Категория: {self.category.name}"
