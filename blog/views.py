@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from blog.models import BlogPost
@@ -29,18 +30,20 @@ class BlogPostDetailView(DetailView):
 
 
 # Создание записи
-class BlogPostCreateView(CreateView):
+class BlogPostCreateView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
     model = BlogPost
     fields = ['title', 'content', 'preview', 'is_published']
     template_name = 'blog/blogpost_form.html'
     success_url = reverse_lazy('blog:list')
+    permission_required = 'blog.add_blogpost'
 
 
 # Редактирование записи
-class BlogPostUpdateView(UpdateView):
+class BlogPostUpdateView(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
     model = BlogPost
     fields = ['title', 'content', 'preview', 'is_published']
     template_name = 'blog/blogpost_form.html'
+    permission_required = 'blog.change_blogpost'
 
     def get_success_url(self):
         """После редактирования перенаправляем на детальную страницу этой записи"""
@@ -48,7 +51,8 @@ class BlogPostUpdateView(UpdateView):
 
 
 # Удаление записи
-class BlogPostDeleteView(DeleteView):
+class BlogPostDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = BlogPost
     template_name = 'blog/blogpost_confirm_delete.html'
     success_url = reverse_lazy('blog:list')
+    permission_required = 'blog.delete_blogpost'
