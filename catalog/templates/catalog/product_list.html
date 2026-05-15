@@ -53,6 +53,24 @@
                         <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-outline-primary">
                             Подробнее →
                         </a>
+                        <div class="mt-2">
+                            <!-- Статус публикации (небольшая метка) -->
+                            {% if product.is_published %}
+                                <span class="badge bg-success mb-2">Опубликован</span>
+                            {% else %}
+                                <span class="badge bg-secondary mb-2">Не опубликован</span>
+                            {% endif %}
+
+                            <br>
+                            <!-- Кнопки -->
+                            {% if product.owner == request.user %}
+                                <a href="{% url 'catalog:product_update' product.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
+                            {% endif %}
+
+                            {% if product.owner == request.user or perms.catalog.delete_product %}
+                                <a href="{% url 'catalog:product_delete' product.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

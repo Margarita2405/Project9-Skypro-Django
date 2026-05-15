@@ -44,6 +44,33 @@
                     <p>📅 Добавлен: {{ product.created_at|date:"d.m.Y H:i" }}</p>
                     <p>✏️ Обновлен: {{ product.updated_at|date:"d.m.Y H:i" }}</p>
                 </div>
+                <!-- Статус публикации -->
+                <div class="mt-3">
+                    {% if product.is_published %}
+                        <span class="badge bg-success">Опубликован</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Не опубликован</span>
+                    {% endif %}
+                </div>
+
+                <!-- Кнопка "Снять с публикации" (только для модератора) -->
+                {% if perms.catalog.can_unpublish_product and product.is_published %}
+                <form action="{% url 'catalog:unpublish_product' product.pk %}" method="post" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-sm">Снять с публикации</button>
+                </form>
+                {% endif %}
+
+                <!-- Кнопки редактирования и удаления -->
+                <div class="mt-3">
+                    {% if product.owner == request.user %}
+                        <a href="{% url 'catalog:product_update' product.pk %}" class="btn btn-primary btn-sm">Редактировать</a>
+                    {% endif %}
+
+                    {% if product.owner == request.user or perms.catalog.delete_product %}
+                        <a href="{% url 'catalog:product_delete' product.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+                    {% endif %}
+                </div>
 
                 <!-- Кнопка возврата к списку товаров -->
                 <div class="mt-4">

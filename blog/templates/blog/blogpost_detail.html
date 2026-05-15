@@ -10,8 +10,11 @@
 <div>
     {{ post.content|linebreaks }}
 </div>
-
-<a href="{% url 'blog:update' post.pk %}">Редактировать</a> |
-<a href="{% url 'blog:delete' post.pk %}">Удалить</a> |
+{% if perms.blog.change_blogpost %}
+    <a href="{% url 'blog:update' post.pk %}">Редактировать</a> |
+{% endif %}
+{% if perms.blog.delete_blogpost %}
+    <a href="{% url 'blog:delete' post.pk %}">Удалить</a> |
+{% endif %}
 <a href="{% url 'blog:list' %}">Назад к списку</a>
 {% endblock %}

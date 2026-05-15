@@ -15,6 +15,7 @@
 {% empty %}
     <p>Нет опубликованных статей.</p>
 {% endfor %}
-
-<a href="{% url 'blog:create' %}">Добавить новую запись</a>
+{% if perms.blog.add_blogpost %}
+    <a href="{% url 'blog:create' %}">Добавить новую запись</a>
+{% endif %}
 {% endblock %}
