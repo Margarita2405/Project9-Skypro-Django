@@ -20,7 +20,7 @@
                 Все товары
             </a>
             {% for cat in categories %}
-            <a href="{% url 'catalog:category_products' cat.id %}" class="btn btn-outline-primary">
+            <a href="{% url 'catalog:category_products' cat.id %}" class="btn btn-outline-primary {% if category and cat.id == category.id %}active{% endif %}">
                 {{ cat.name }}
             </a>
             {% endfor %}
