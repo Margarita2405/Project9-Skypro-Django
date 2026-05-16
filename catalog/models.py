@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class Category(models.Model):
@@ -54,7 +54,6 @@ class Product(models.Model):
         verbose_name="Владелец",
     )
 
-
     def __str__(self):
         return self.name
 
@@ -63,7 +62,7 @@ class Product(models.Model):
         verbose_name_plural = "Товары"
         ordering = ["name", "category"]
         permissions = [
-            ('can_unpublish_product', 'Может отменять публикацию продукта'),
+            ("can_unpublish_product", "Может отменять публикацию продукта"),
         ]
 
 
