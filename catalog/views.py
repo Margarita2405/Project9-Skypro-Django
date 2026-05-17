@@ -1,12 +1,16 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 
 from catalog.models import Category, Contact, Product
+from catalog.services import get_products_by_category
 
 from .forms import ProductForm
 
@@ -29,17 +33,21 @@ class ProductListView(ListView):
     ordering = "-created_at"
 
     def get_queryset(self):
-        # select_related для оптимизации
-        return super().get_queryset().select_related("category")
+        queryset = cache.get("products_queryset")
+        if not queryset:
+            queryset = super().get_queryset()
+            cache.set("products_queryset", queryset, 60 * 15)  # Кешируем данные на 15 минут
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['request'] = self.request
+        context["request"] = self.request
         context["categories"] = Category.objects.all()
         context["title"] = "Каталог товаров"
         return context
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class ProductDetailView(DetailView):
     model = Product
     template_name = "catalog/product_detail.html"
@@ -85,7 +93,7 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_object(self, queryset=None):
         object = super().get_object(queryset)
-        if object.owner != self.request.user and not self.request.user.has_perm('catalog.delete_product'):
+        if object.owner != self.request.user and not self.request.user.has_perm("catalog.delete_product"):
             raise PermissionDenied("Удалять может владелец или модератор")
         return object
 
@@ -93,11 +101,11 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
 class UnpublishProductView(LoginRequiredMixin, View):
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
-        if not request.user.has_perm('catalog.can_unpublish_product'):
+        if not request.user.has_perm("catalog.can_unpublish_product"):
             raise PermissionDenied("Нет права отменять публикацию")
         product.is_published = False
         product.save()
-        return redirect('catalog:product_detail', pk=pk)
+        return redirect("catalog:product_detail", pk=pk)
 
 
 class ContactsView(View):
@@ -135,17 +143,16 @@ class CategoryProductsView(ListView):
     model = Product
     template_name = "catalog/product_list.html"
     context_object_name = "products"
-    ordering = "-created_at"
 
     def get_queryset(self):
         category_id = self.kwargs["category_id"]
-        self.category = get_object_or_404(Category, pk=category_id)
-        return self.category.products.all().order_by("-created_at")
+        # Используем сервисную функцию с кешированием
+        return get_products_by_category(category_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['request'] = self.request
+        context["request"] = self.request
         context["categories"] = Category.objects.all()
-        context["category"] = self.category
-        context["title"] = f"Категория: {self.category.name}"
+        context["category"] = get_object_or_404(Category, pk=self.kwargs["category_id"])
+        context["title"] = f"Категория: {context['category'].name}"
         return context
